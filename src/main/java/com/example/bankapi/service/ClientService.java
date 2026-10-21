@@ -1,6 +1,7 @@
 package com.example.bankapi.service;
 
 import com.example.bankapi.dto.ClientCreateRequest;
+import com.example.bankapi.dto.ClientResponse;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
 import com.example.bankapi.repository.ClientRepository;
@@ -14,7 +15,8 @@ public class ClientService {
     public ClientService(ClientRepository clientRepository) {
         this.clientRepository = clientRepository;
     }
-    public Client create(ClientCreateRequest request) {
+
+    public ClientResponse create(ClientCreateRequest request) {
         if (clientRepository.existsByEmail(request.getEmail())) {
             throw new ClientAlreadyExistsException(
                     "Client with this email already exists"
@@ -29,6 +31,15 @@ public class ClientService {
                 request.getBirthDate()
         );
 
-        return clientRepository.save(client);
+        Client savedClient = clientRepository.save(client);
+
+        return new ClientResponse(
+                savedClient.getId(),
+                savedClient.getLastName(),
+                savedClient.getFirstName(),
+                savedClient.getMiddleName(),
+                savedClient.getEmail(),
+                savedClient.getBirthDate()
+        );
     }
 }

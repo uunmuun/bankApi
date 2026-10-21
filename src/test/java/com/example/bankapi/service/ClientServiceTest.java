@@ -1,6 +1,7 @@
 package com.example.bankapi.service;
 
 import com.example.bankapi.dto.ClientCreateRequest;
+import com.example.bankapi.dto.ClientResponse;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
 import com.example.bankapi.repository.ClientRepository;
@@ -47,7 +48,7 @@ class ClientServiceTest {
         when(clientRepository.save(any(Client.class)))
                 .thenReturn(client);
 
-        Client result = clientService.create(request);
+        ClientResponse result = clientService.create(request);
 
         assertNotNull(result);
         assertEquals("ivan@example.com", result.getEmail());
