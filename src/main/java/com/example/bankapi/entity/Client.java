@@ -1,9 +1,6 @@
 package com.example.bankapi.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -20,6 +17,7 @@ public class Client {
 
     private String middleName;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     private LocalDate birthDate;
