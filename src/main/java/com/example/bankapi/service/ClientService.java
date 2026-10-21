@@ -1,5 +1,7 @@
 package com.example.bankapi.service;
 
+import com.example.bankapi.dto.ClientCreateRequest;
+import com.example.bankapi.entity.Client;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
@@ -10,5 +12,16 @@ public class ClientService {
 
     public ClientService(ClientRepository clientRepository) {
         this.clientRepository = clientRepository;
+    }
+    public Client create(ClientCreateRequest request) {
+        Client client = new Client(
+                request.getLastName(),
+                request.getFirstName(),
+                request.getMiddleName(),
+                request.getEmail(),
+                request.getBirthDate()
+        );
+
+        return clientRepository.save(client);
     }
 }
