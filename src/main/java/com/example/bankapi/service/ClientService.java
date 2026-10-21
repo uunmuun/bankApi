@@ -7,6 +7,8 @@ import com.example.bankapi.exception.ClientAlreadyExistsException;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ClientService {
 
@@ -41,5 +43,19 @@ public class ClientService {
                 savedClient.getEmail(),
                 savedClient.getBirthDate()
         );
+    }
+
+    public List<ClientResponse> getAll() {
+        return clientRepository.findAll()
+                .stream()
+                .map(client -> new ClientResponse(
+                        client.getId(),
+                        client.getLastName(),
+                        client.getFirstName(),
+                        client.getMiddleName(),
+                        client.getEmail(),
+                        client.getBirthDate()
+                ))
+                .toList();
     }
 }
