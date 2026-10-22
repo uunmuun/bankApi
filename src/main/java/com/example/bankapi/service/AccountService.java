@@ -101,7 +101,6 @@ public class AccountService {
                 );
 
         account.setCurrency(request.getCurrency());
-        account.setBalance(request.getBalance());
 
         Account updatedAccount = accountRepository.save(account);
 
@@ -131,6 +130,13 @@ public class AccountService {
         accountRepository.delete(account);
     }
     public List<AccountResponse> getByClientId(Long clientId) {
+
+        clientRepository.findById(clientId)
+                .orElseThrow(() ->
+                        new ClientNotFoundException(
+                                "Client with id " + clientId + " not found"
+                        )
+                );
 
         return accountRepository.findByClientId(clientId)
                 .stream()

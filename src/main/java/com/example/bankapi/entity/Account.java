@@ -15,8 +15,10 @@ public class Account {
     private String accountNumber;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Currency currency;
 
+    @Column(nullable = false)
     private BigDecimal balance;
 
     @ManyToOne

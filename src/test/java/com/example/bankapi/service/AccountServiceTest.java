@@ -206,7 +206,6 @@ class AccountServiceTest {
 
         AccountUpdateRequest request = new AccountUpdateRequest();
         request.setCurrency(Currency.USD);
-        request.setBalance(new BigDecimal("2500.00"));
 
         when(accountRepository.findById(1L))
                 .thenReturn(Optional.of(account));
@@ -218,7 +217,7 @@ class AccountServiceTest {
 
         assertEquals(1L, response.getId());
         assertEquals(Currency.USD, response.getCurrency());
-        assertEquals(new BigDecimal("2500.00"), response.getBalance());
+        assertEquals(new BigDecimal("1000.00"), response.getBalance());
 
         verify(accountRepository).findById(1L);
         verify(accountRepository).save(account);
