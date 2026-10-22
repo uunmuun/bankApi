@@ -4,6 +4,8 @@ import com.example.bankapi.dto.CardCreateRequest;
 import com.example.bankapi.dto.CardResponse;
 import com.example.bankapi.dto.CardUpdateRequest;
 import com.example.bankapi.service.CardService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,17 +33,27 @@ public class CardController {
 
     @PostMapping
     public ResponseEntity<CardResponse> create(
-            @RequestBody CardCreateRequest request
-    ) {
-        return ResponseEntity.ok(cardService.create(request));
+            @RequestBody @Valid CardCreateRequest request    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(cardService.create(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CardResponse> update(
             @PathVariable Long id,
-            @RequestBody CardUpdateRequest request
+            @RequestBody @Valid CardUpdateRequest request
     ) {
         return ResponseEntity.ok(cardService.update(id, request));
+    }
+
+    @PatchMapping("/{id}/block")
+    public ResponseEntity<CardResponse> block(@PathVariable Long id) {
+        return ResponseEntity.ok(cardService.block(id));
+    }
+
+    @PatchMapping("/{id}/unblock")
+    public ResponseEntity<CardResponse> unblock(@PathVariable Long id) {
+        return ResponseEntity.ok(cardService.unblock(id));
     }
 
     @DeleteMapping("/{id}")

@@ -116,6 +116,52 @@ public class CardService {
         );
     }
 
+    public CardResponse block(Long id) {
+
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() ->
+                        new CardNotFoundException(
+                                "Card with id " + id + " not found"
+                        )
+                );
+
+        card.setStatus(CardStatus.BLOCKED);
+
+        Card blockedCard = cardRepository.save(card);
+
+        return new CardResponse(
+                blockedCard.getId(),
+                blockedCard.getCardNumber(),
+                blockedCard.getExpirationDate(),
+                blockedCard.getType(),
+                blockedCard.getStatus(),
+                blockedCard.getAccount().getId()
+        );
+    }
+
+    public CardResponse unblock(Long id) {
+
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() ->
+                        new CardNotFoundException(
+                                "Card with id " + id + " not found"
+                        )
+                );
+
+        card.setStatus(CardStatus.ACTIVE);
+
+        Card unblockedCard = cardRepository.save(card);
+
+        return new CardResponse(
+                unblockedCard.getId(),
+                unblockedCard.getCardNumber(),
+                unblockedCard.getExpirationDate(),
+                unblockedCard.getType(),
+                unblockedCard.getStatus(),
+                unblockedCard.getAccount().getId()
+        );
+    }
+
     public void delete(Long id) {
 
         Card card = cardRepository.findById(id)

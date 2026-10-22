@@ -138,6 +138,7 @@ public class AccountService {
             );
         }
 
+        cardRepository.deleteByAccountId(id);
         accountRepository.delete(account);
     }
 
