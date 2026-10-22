@@ -78,6 +78,7 @@ public class ClientService {
                 client.getBirthDate()
         );
     }
+
     public ClientResponse update(Long id, ClientUpdateRequest request) {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() ->
@@ -110,6 +111,7 @@ public class ClientService {
                 updatedClient.getBirthDate()
         );
     }
+
     public void delete(Long id) {
         Client client = clientRepository.findById(id)
                 .orElseThrow(() ->

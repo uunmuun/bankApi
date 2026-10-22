@@ -4,12 +4,14 @@ import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
+import com.example.bankapi.entity.CardStatus;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Currency;
 import com.example.bankapi.exception.AccountNotEmptyException;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
+import com.example.bankapi.repository.CardRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +36,9 @@ class AccountServiceTest {
 
     @Mock
     private ClientRepository clientRepository;
+
+    @Mock
+    private CardRepository cardRepository;
 
     @InjectMocks
     private AccountService accountService;
@@ -245,9 +250,18 @@ class AccountServiceTest {
         when(accountRepository.findById(1L))
                 .thenReturn(Optional.of(account));
 
+        when(cardRepository.existsByAccountIdAndStatus(
+                1L,
+                CardStatus.ACTIVE
+        )).thenReturn(false);
+
         accountService.delete(1L);
 
         verify(accountRepository).findById(1L);
+        verify(cardRepository).existsByAccountIdAndStatus(
+                1L,
+                CardStatus.ACTIVE
+        );
         verify(accountRepository).delete(account);
     }
     @Test
@@ -262,6 +276,8 @@ class AccountServiceTest {
         );
 
         verify(accountRepository).findById(999L);
+        verify(cardRepository, never())
+                .existsByAccountIdAndStatus(anyLong(), any(CardStatus.class));
         verify(accountRepository, never()).delete(any(Account.class));
     }
     @Test
@@ -293,6 +309,8 @@ class AccountServiceTest {
         );
 
         verify(accountRepository).findById(1L);
+        verify(cardRepository, never())
+                .existsByAccountIdAndStatus(anyLong(), any(CardStatus.class));
         verify(accountRepository, never()).delete(any(Account.class));
     }
 }
