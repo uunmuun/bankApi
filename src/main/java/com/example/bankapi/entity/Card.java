@@ -2,6 +2,8 @@ package com.example.bankapi.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+
 @Entity
 public class Card {
 
@@ -10,6 +12,11 @@ public class Card {
     private Long id;
 
     private String cardNumber;
+
+    private LocalDate expirationDate;
+
+    @Enumerated(EnumType.STRING)
+    private CardType type;
 
     @Enumerated(EnumType.STRING)
     private CardStatus status;
@@ -23,10 +30,14 @@ public class Card {
 
     public Card(
             String cardNumber,
+            LocalDate expirationDate,
+            CardType type,
             CardStatus status,
             Account account
     ) {
         this.cardNumber = cardNumber;
+        this.expirationDate = expirationDate;
+        this.type = type;
         this.status = status;
         this.account = account;
     }
@@ -39,6 +50,14 @@ public class Card {
         return cardNumber;
     }
 
+    public LocalDate getExpirationDate() {
+        return expirationDate;
+    }
+
+    public CardType getType() {
+        return type;
+    }
+
     public CardStatus getStatus() {
         return status;
     }
@@ -49,6 +68,14 @@ public class Card {
 
     public void setCardNumber(String cardNumber) {
         this.cardNumber = cardNumber;
+    }
+
+    public void setExpirationDate(LocalDate expirationDate) {
+        this.expirationDate = expirationDate;
+    }
+
+    public void setType(CardType type) {
+        this.type = type;
     }
 
     public void setStatus(CardStatus status) {

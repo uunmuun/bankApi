@@ -2,6 +2,7 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.CardCreateRequest;
 import com.example.bankapi.dto.CardResponse;
+import com.example.bankapi.dto.CardUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Card;
 import com.example.bankapi.entity.CardStatus;
@@ -38,6 +39,8 @@ public class CardService {
 
         Card card = new Card(
                 generateCardNumber(),
+                request.getExpirationDate(),
+                request.getType(),
                 CardStatus.ACTIVE,
                 account
         );
@@ -47,6 +50,8 @@ public class CardService {
         return new CardResponse(
                 savedCard.getId(),
                 savedCard.getCardNumber(),
+                savedCard.getExpirationDate(),
+                savedCard.getType(),
                 savedCard.getStatus(),
                 savedCard.getAccount().getId()
         );
@@ -64,6 +69,8 @@ public class CardService {
         return new CardResponse(
                 card.getId(),
                 card.getCardNumber(),
+                card.getExpirationDate(),
+                card.getType(),
                 card.getStatus(),
                 card.getAccount().getId()
         );
@@ -76,10 +83,37 @@ public class CardService {
                 .map(card -> new CardResponse(
                         card.getId(),
                         card.getCardNumber(),
+                        card.getExpirationDate(),
+                        card.getType(),
                         card.getStatus(),
                         card.getAccount().getId()
                 ))
                 .toList();
+    }
+
+    public CardResponse update(Long id, CardUpdateRequest request) {
+
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() ->
+                        new CardNotFoundException(
+                                "Card with id " + id + " not found"
+                        )
+                );
+
+        card.setExpirationDate(request.getExpirationDate());
+        card.setType(request.getType());
+        card.setStatus(request.getStatus());
+
+        Card updatedCard = cardRepository.save(card);
+
+        return new CardResponse(
+                updatedCard.getId(),
+                updatedCard.getCardNumber(),
+                updatedCard.getExpirationDate(),
+                updatedCard.getType(),
+                updatedCard.getStatus(),
+                updatedCard.getAccount().getId()
+        );
     }
 
     public void delete(Long id) {
