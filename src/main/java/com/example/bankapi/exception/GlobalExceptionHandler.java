@@ -18,4 +18,9 @@ public class GlobalExceptionHandler {
     public String handleClientNotFound(ClientNotFoundException exception) {
         return exception.getMessage();
     }
+    @ExceptionHandler(PhoneNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handlePhoneNotFound(PhoneNotFoundException ex) {
+        return ex.getMessage();
+    }
 }
