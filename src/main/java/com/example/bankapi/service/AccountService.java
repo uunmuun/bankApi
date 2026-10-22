@@ -4,6 +4,7 @@ import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
+import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class AccountService {
 
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new ClientNotFoundException(
                                 "Client with id " + clientId + " not found"
                         )
                 );

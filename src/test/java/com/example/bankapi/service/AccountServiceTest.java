@@ -5,6 +5,7 @@ import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Currency;
+import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.junit.jupiter.api.Test;
@@ -68,5 +69,24 @@ class AccountServiceTest {
 
         verify(clientRepository).findById(1L);
         verify(accountRepository).save(any(Account.class));
+    }
+
+    @Test
+    void shouldNotCreateAccountWhenClientNotFound() {
+
+        AccountCreateRequest request = new AccountCreateRequest();
+        request.setCurrency(Currency.KGS);
+        request.setBalance(new BigDecimal("1000.00"));
+
+        when(clientRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ClientNotFoundException.class,
+                () -> accountService.create(999L, request)
+        );
+
+        verify(clientRepository).findById(999L);
+        verify(accountRepository, never()).save(any(Account.class));
     }
 }
