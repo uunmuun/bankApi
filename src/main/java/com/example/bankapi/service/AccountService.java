@@ -12,6 +12,7 @@ import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AccountService {
@@ -36,8 +37,13 @@ public class AccountService {
                         )
                 );
 
+        String accountNumber = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 12);
+
         Account account = new Account(
-                null,
+                accountNumber,
                 request.getCurrency(),
                 request.getBalance(),
                 client
@@ -115,5 +121,18 @@ public class AccountService {
                 );
 
         accountRepository.delete(account);
+    }
+    public List<AccountResponse> getByClientId(Long clientId) {
+
+        return accountRepository.findByClientId(clientId)
+                .stream()
+                .map(account -> new AccountResponse(
+                        account.getId(),
+                        account.getAccountNumber(),
+                        account.getCurrency(),
+                        account.getBalance(),
+                        account.getClient().getId()
+                ))
+                .toList();
     }
 }

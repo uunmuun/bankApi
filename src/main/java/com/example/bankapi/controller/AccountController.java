@@ -47,5 +47,11 @@ public class AccountController {
         accountService.delete(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<List<AccountResponse>> getByClientId(
+            @PathVariable Long clientId
+    ) {
+        return ResponseEntity.ok(accountService.getByClientId(clientId));
+    }
 
 }
