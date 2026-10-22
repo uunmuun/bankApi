@@ -5,6 +5,7 @@ import com.example.bankapi.dto.PhoneResponse;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Phone;
 import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.exception.PhoneNotFoundException;
 import com.example.bankapi.repository.ClientRepository;
 import com.example.bankapi.repository.PhoneRepository;
 import org.springframework.stereotype.Service;
@@ -62,5 +63,19 @@ public class PhoneService {
                         phone.getType()
                 ))
                 .toList();
+    }
+    public PhoneResponse getById(Long clientId, Long phoneId) {
+        Phone phone = phoneRepository.findByIdAndClientId(phoneId, clientId)
+                .orElseThrow(() ->
+                        new PhoneNotFoundException(
+                                "Phone with id " + phoneId + " not found"
+                        )
+                );
+
+        return new PhoneResponse(
+                phone.getId(),
+                phone.getNumber(),
+                phone.getType()
+        );
     }
 }

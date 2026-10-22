@@ -31,4 +31,11 @@ public class PhoneController {
     public List<PhoneResponse> getAll(@PathVariable Long clientId) {
         return phoneService.getAll(clientId);
     }
+    @GetMapping("/{phoneId}")
+    public PhoneResponse getById(
+            @PathVariable Long clientId,
+            @PathVariable Long phoneId
+    ) {
+        return phoneService.getById(clientId, phoneId);
+    }
 }

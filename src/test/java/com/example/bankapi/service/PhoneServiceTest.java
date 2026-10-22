@@ -6,6 +6,7 @@ import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Phone;
 import com.example.bankapi.entity.PhoneType;
 import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.exception.PhoneNotFoundException;
 import com.example.bankapi.repository.ClientRepository;
 import com.example.bankapi.repository.PhoneRepository;
 import org.junit.jupiter.api.Test;
@@ -141,5 +142,48 @@ class PhoneServiceTest {
 
         verify(clientRepository).existsById(999L);
         verify(phoneRepository, never()).findByClientId(anyLong());
+    }
+    @Test
+    void getById_shouldReturnPhone() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        Phone phone = new Phone(
+                "+996700123456",
+                PhoneType.MOBILE,
+                client
+        );
+
+        ReflectionTestUtils.setField(phone, "id", 5L);
+
+        when(phoneRepository.findByIdAndClientId(5L, 1L))
+                .thenReturn(Optional.of(phone));
+
+        PhoneResponse response = phoneService.getById(1L, 5L);
+
+        assertEquals(5L, response.getId());
+        assertEquals("+996700123456", response.getNumber());
+        assertEquals(PhoneType.MOBILE, response.getType());
+
+        verify(phoneRepository).findByIdAndClientId(5L, 1L);
+    }
+    @Test
+    void getById_shouldThrowExceptionWhenPhoneNotFound() {
+        when(phoneRepository.findByIdAndClientId(999L, 1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                PhoneNotFoundException.class,
+                () -> phoneService.getById(1L, 999L)
+        );
+
+        verify(phoneRepository).findByIdAndClientId(999L, 1L);
     }
 }
