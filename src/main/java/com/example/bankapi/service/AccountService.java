@@ -49,4 +49,21 @@ public class AccountService {
                 savedAccount.getClient().getId()
         );
     }
+    public AccountResponse getById(Long id) {
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Account with id " + id + " not found"
+                        )
+                );
+
+        return new AccountResponse(
+                account.getId(),
+                account.getAccountNumber(),
+                account.getCurrency(),
+                account.getBalance(),
+                account.getClient().getId()
+        );
+    }
 }

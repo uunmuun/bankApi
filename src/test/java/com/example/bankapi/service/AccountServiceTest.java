@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -88,5 +89,37 @@ class AccountServiceTest {
 
         verify(clientRepository).findById(999L);
         verify(accountRepository, never()).save(any(Account.class));
+    }
+    @Test
+    void getById_shouldReturnAccount() {
+
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        Account account = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("1000.00"),
+                client
+        );
+
+        ReflectionTestUtils.setField(account, "id", 1L);
+
+        when(accountRepository.findById(1L))
+                .thenReturn(Optional.of(account));
+
+        AccountResponse response = accountService.getById(1L);
+
+        assertEquals(1L, response.getId());
+        assertEquals("123456789", response.getAccountNumber());
+        assertEquals(Currency.KGS, response.getCurrency());
+        assertEquals(new BigDecimal("1000.00"), response.getBalance());
+
+        verify(accountRepository).findById(1L);
     }
 }
