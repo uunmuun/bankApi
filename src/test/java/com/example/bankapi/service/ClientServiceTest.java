@@ -2,8 +2,10 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.ClientCreateRequest;
 import com.example.bankapi.dto.ClientResponse;
+import com.example.bankapi.dto.ClientUpdateRequest;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
+import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.ClientRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,5 +102,88 @@ class ClientServiceTest {
         assertEquals("Ivanov", response.getLastName());
         assertEquals("Ivan", response.getFirstName());
         assertEquals("ivan@example.com", response.getEmail());
+    }
+
+    @Test
+    void update_shouldUpdateClient() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        ClientUpdateRequest request = new ClientUpdateRequest();
+        request.setLastName("Petrov");
+        request.setFirstName("Petr");
+        request.setMiddleName("Petrovich");
+        request.setEmail("petr@example.com");
+        request.setBirthDate(LocalDate.of(1998, 3, 15));
+
+        when(clientRepository.findById(1L))
+                .thenReturn(Optional.of(client));
+
+        when(clientRepository.existsByEmail("petr@example.com"))
+                .thenReturn(false);
+
+        when(clientRepository.save(client))
+                .thenReturn(client);
+
+        ClientResponse response = clientService.update(1L, request);
+
+        assertEquals(1L, response.getId());
+        assertEquals("Petrov", response.getLastName());
+        assertEquals("Petr", response.getFirstName());
+        assertEquals("Petrovich", response.getMiddleName());
+        assertEquals("petr@example.com", response.getEmail());
+        assertEquals(LocalDate.of(1998, 3, 15), response.getBirthDate());
+    }
+
+    @Test
+    void update_shouldThrowExceptionWhenClientNotFound() {
+        ClientUpdateRequest request = new ClientUpdateRequest();
+
+        when(clientRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ClientNotFoundException.class,
+                () -> clientService.update(999L, request)
+        );
+    }
+    @Test
+    void update_shouldThrowExceptionWhenEmailAlreadyExists() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        ClientUpdateRequest request = new ClientUpdateRequest();
+        request.setLastName("Petrov");
+        request.setFirstName("Petr");
+        request.setMiddleName("Petrovich");
+        request.setEmail("other@example.com");
+        request.setBirthDate(LocalDate.of(1998, 3, 15));
+
+        when(clientRepository.findById(1L))
+                .thenReturn(Optional.of(client));
+
+        when(clientRepository.existsByEmail("other@example.com"))
+                .thenReturn(true);
+
+        assertThrows(
+                ClientAlreadyExistsException.class,
+                () -> clientService.update(1L, request)
+        );
+
+        verify(clientRepository, never()).save(any(Client.class));
     }
 }

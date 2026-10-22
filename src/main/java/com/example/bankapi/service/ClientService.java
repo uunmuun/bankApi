@@ -2,6 +2,7 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.ClientCreateRequest;
 import com.example.bankapi.dto.ClientResponse;
+import com.example.bankapi.dto.ClientUpdateRequest;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
 import com.example.bankapi.exception.ClientNotFoundException;
@@ -75,6 +76,38 @@ public class ClientService {
                 client.getMiddleName(),
                 client.getEmail(),
                 client.getBirthDate()
+        );
+    }
+    public ClientResponse update(Long id, ClientUpdateRequest request) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() ->
+                        new ClientNotFoundException(
+                                "Client with id " + id + " not found"
+                        )
+                );
+
+        if (!client.getEmail().equals(request.getEmail())
+                && clientRepository.existsByEmail(request.getEmail())) {
+            throw new ClientAlreadyExistsException(
+                    "Client with this email already exists"
+            );
+        }
+
+        client.setLastName(request.getLastName());
+        client.setFirstName(request.getFirstName());
+        client.setMiddleName(request.getMiddleName());
+        client.setEmail(request.getEmail());
+        client.setBirthDate(request.getBirthDate());
+
+        Client updatedClient = clientRepository.save(client);
+
+        return new ClientResponse(
+                updatedClient.getId(),
+                updatedClient.getLastName(),
+                updatedClient.getFirstName(),
+                updatedClient.getMiddleName(),
+                updatedClient.getEmail(),
+                updatedClient.getBirthDate()
         );
     }
 }
