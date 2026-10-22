@@ -2,6 +2,7 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.PhoneCreateRequest;
 import com.example.bankapi.dto.PhoneResponse;
+import com.example.bankapi.dto.PhoneUpdateRequest;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Phone;
 import com.example.bankapi.exception.ClientNotFoundException;
@@ -76,6 +77,25 @@ public class PhoneService {
                 phone.getId(),
                 phone.getNumber(),
                 phone.getType()
+        );
+    }
+    public PhoneResponse update(Long clientId, Long phoneId, PhoneUpdateRequest request) {
+        Phone phone = phoneRepository.findByIdAndClientId(phoneId, clientId)
+                .orElseThrow(() ->
+                        new PhoneNotFoundException(
+                                "Phone with id " + phoneId + " not found"
+                        )
+                );
+
+        phone.setNumber(request.getNumber());
+        phone.setType(request.getType());
+
+        Phone updatedPhone = phoneRepository.save(phone);
+
+        return new PhoneResponse(
+                updatedPhone.getId(),
+                updatedPhone.getNumber(),
+                updatedPhone.getType()
         );
     }
 }

@@ -2,6 +2,7 @@ package com.example.bankapi.controller;
 
 import com.example.bankapi.dto.PhoneCreateRequest;
 import com.example.bankapi.dto.PhoneResponse;
+import com.example.bankapi.dto.PhoneUpdateRequest;
 import com.example.bankapi.service.PhoneService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,5 +38,13 @@ public class PhoneController {
             @PathVariable Long phoneId
     ) {
         return phoneService.getById(clientId, phoneId);
+    }
+    @PutMapping("/{phoneId}")
+    public PhoneResponse update(
+            @PathVariable Long clientId,
+            @PathVariable Long phoneId,
+            @Valid @RequestBody PhoneUpdateRequest request
+    ) {
+        return phoneService.update(clientId, phoneId, request);
     }
 }

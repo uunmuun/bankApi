@@ -2,6 +2,7 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.PhoneCreateRequest;
 import com.example.bankapi.dto.PhoneResponse;
+import com.example.bankapi.dto.PhoneUpdateRequest;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Phone;
 import com.example.bankapi.entity.PhoneType;
@@ -185,5 +186,61 @@ class PhoneServiceTest {
         );
 
         verify(phoneRepository).findByIdAndClientId(999L, 1L);
+    }
+    @Test
+    void update_shouldUpdatePhone() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        Phone phone = new Phone(
+                "+996700123456",
+                PhoneType.MOBILE,
+                client
+        );
+
+        ReflectionTestUtils.setField(phone, "id", 5L);
+
+        PhoneUpdateRequest request = new PhoneUpdateRequest();
+        request.setNumber("+996555987654");
+        request.setType(PhoneType.WORK);
+
+        when(phoneRepository.findByIdAndClientId(5L, 1L))
+                .thenReturn(Optional.of(phone));
+
+        when(phoneRepository.save(phone))
+                .thenReturn(phone);
+
+        PhoneResponse response = phoneService.update(1L, 5L, request);
+
+        assertEquals(5L, response.getId());
+        assertEquals("+996555987654", response.getNumber());
+        assertEquals(PhoneType.WORK, response.getType());
+
+        verify(phoneRepository).findByIdAndClientId(5L, 1L);
+        verify(phoneRepository).save(phone);
+    }
+    @Test
+    void update_shouldThrowExceptionWhenPhoneNotFound() {
+        PhoneUpdateRequest request = new PhoneUpdateRequest();
+        request.setNumber("+996555987654");
+        request.setType(PhoneType.WORK);
+
+        when(phoneRepository.findByIdAndClientId(999L, 1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                PhoneNotFoundException.class,
+                () -> phoneService.update(1L, 999L, request)
+        );
+
+        verify(phoneRepository).findByIdAndClientId(999L, 1L);
+        verify(phoneRepository, never()).save(any(Phone.class));
     }
 }
