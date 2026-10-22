@@ -10,8 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -75,5 +77,28 @@ class ClientServiceTest {
 
         verify(clientRepository).existsByEmail(request.getEmail());
         verify(clientRepository, never()).save(any(Client.class));
+    }
+
+    @Test
+    void getById_shouldReturnClient() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        when(clientRepository.findById(1L))
+                .thenReturn(Optional.of(client));
+
+        ClientResponse response = clientService.getById(1L);
+
+        assertEquals(1L, response.getId());
+        assertEquals("Ivanov", response.getLastName());
+        assertEquals("Ivan", response.getFirstName());
+        assertEquals("ivan@example.com", response.getEmail());
     }
 }

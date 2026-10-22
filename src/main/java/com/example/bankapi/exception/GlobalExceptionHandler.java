@@ -13,4 +13,9 @@ public class GlobalExceptionHandler {
     public String handleClientAlreadyExists(ClientAlreadyExistsException exception) {
         return exception.getMessage();
     }
+    @ExceptionHandler(ClientNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleClientNotFound(ClientNotFoundException exception) {
+        return exception.getMessage();
+    }
 }

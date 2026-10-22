@@ -4,6 +4,7 @@ import com.example.bankapi.dto.ClientCreateRequest;
 import com.example.bankapi.dto.ClientResponse;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
+import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
@@ -57,5 +58,23 @@ public class ClientService {
                         client.getBirthDate()
                 ))
                 .toList();
+    }
+
+    public ClientResponse getById(Long id) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() ->
+                        new ClientNotFoundException(
+                                "Client with id " + id + " not found"
+                        )
+                );
+
+        return new ClientResponse(
+                client.getId(),
+                client.getLastName(),
+                client.getFirstName(),
+                client.getMiddleName(),
+                client.getEmail(),
+                client.getBirthDate()
+        );
     }
 }
