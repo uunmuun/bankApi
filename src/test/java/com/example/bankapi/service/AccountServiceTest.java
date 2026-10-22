@@ -206,4 +206,46 @@ class AccountServiceTest {
         verify(accountRepository).findById(1L);
         verify(accountRepository).save(account);
     }
+    @Test
+    void delete_shouldDeleteAccount() {
+
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        Account account = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("1000.00"),
+                client
+        );
+
+        ReflectionTestUtils.setField(account, "id", 1L);
+
+        when(accountRepository.findById(1L))
+                .thenReturn(Optional.of(account));
+
+        accountService.delete(1L);
+
+        verify(accountRepository).findById(1L);
+        verify(accountRepository).delete(account);
+    }
+    @Test
+    void delete_shouldThrowExceptionWhenAccountNotFound() {
+
+        when(accountRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> accountService.delete(999L)
+        );
+
+        verify(accountRepository).findById(999L);
+        verify(accountRepository, never()).delete(any(Account.class));
+    }
 }

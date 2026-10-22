@@ -104,4 +104,15 @@ public class AccountService {
                 updatedAccount.getClient().getId()
         );
     }
+    public void delete(Long id) {
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Account with id " + id + " not found"
+                        )
+                );
+
+        accountRepository.delete(account);
+    }
 }
