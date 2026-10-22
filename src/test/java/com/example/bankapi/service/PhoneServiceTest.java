@@ -1,0 +1,95 @@
+package com.example.bankapi.service;
+
+import com.example.bankapi.dto.PhoneCreateRequest;
+import com.example.bankapi.dto.PhoneResponse;
+import com.example.bankapi.entity.Client;
+import com.example.bankapi.entity.Phone;
+import com.example.bankapi.entity.PhoneType;
+import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.repository.ClientRepository;
+import com.example.bankapi.repository.PhoneRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class PhoneServiceTest {
+
+    @Mock
+    private PhoneRepository phoneRepository;
+
+    @Mock
+    private ClientRepository clientRepository;
+
+    @InjectMocks
+    private PhoneService phoneService;
+
+    @Test
+    void create_shouldCreatePhone() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        PhoneCreateRequest request = new PhoneCreateRequest();
+        request.setNumber("+996700123456");
+        request.setType(PhoneType.MOBILE);
+
+        when(clientRepository.findById(1L))
+                .thenReturn(Optional.of(client));
+
+        Phone phone = new Phone(
+                request.getNumber(),
+                request.getType(),
+                client
+        );
+
+        ReflectionTestUtils.setField(phone, "id", 1L);
+
+        when(phoneRepository.save(any(Phone.class)))
+                .thenReturn(phone);
+
+        PhoneResponse response = phoneService.create(1L, request);
+
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals("+996700123456", response.getNumber());
+        assertEquals(PhoneType.MOBILE, response.getType());
+
+        verify(clientRepository).findById(1L);
+        verify(phoneRepository).save(any(Phone.class));
+    }
+
+    @Test
+    void create_shouldThrowExceptionWhenClientNotFound() {
+        PhoneCreateRequest request = new PhoneCreateRequest();
+        request.setNumber("+996700123456");
+        request.setType(PhoneType.MOBILE);
+
+        when(clientRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ClientNotFoundException.class,
+                () -> phoneService.create(999L, request)
+        );
+
+        verify(clientRepository).findById(999L);
+        verify(phoneRepository, never()).save(any(Phone.class));
+    }
+}
