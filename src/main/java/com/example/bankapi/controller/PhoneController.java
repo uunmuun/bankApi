@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/clients/{clientId}/phones")
 public class PhoneController {
@@ -24,5 +26,9 @@ public class PhoneController {
             @Valid @RequestBody PhoneCreateRequest request
     ) {
         return phoneService.create(clientId, request);
+    }
+    @GetMapping
+    public List<PhoneResponse> getAll(@PathVariable Long clientId) {
+        return phoneService.getAll(clientId);
     }
 }

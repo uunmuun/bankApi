@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,5 +92,54 @@ class PhoneServiceTest {
 
         verify(clientRepository).findById(999L);
         verify(phoneRepository, never()).save(any(Phone.class));
+    }
+    @Test
+    void getAll_shouldReturnClientPhones() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        Phone phone = new Phone(
+                "+996700123456",
+                PhoneType.MOBILE,
+                client
+        );
+
+        ReflectionTestUtils.setField(phone, "id", 1L);
+
+        when(clientRepository.existsById(1L))
+                .thenReturn(true);
+
+        when(phoneRepository.findByClientId(1L))
+                .thenReturn(List.of(phone));
+
+        List<PhoneResponse> response = phoneService.getAll(1L);
+
+        assertEquals(1, response.size());
+        assertEquals(1L, response.get(0).getId());
+        assertEquals("+996700123456", response.get(0).getNumber());
+        assertEquals(PhoneType.MOBILE, response.get(0).getType());
+
+        verify(clientRepository).existsById(1L);
+        verify(phoneRepository).findByClientId(1L);
+    }
+    @Test
+    void getAll_shouldThrowExceptionWhenClientNotFound() {
+        when(clientRepository.existsById(999L))
+                .thenReturn(false);
+
+        assertThrows(
+                ClientNotFoundException.class,
+                () -> phoneService.getAll(999L)
+        );
+
+        verify(clientRepository).existsById(999L);
+        verify(phoneRepository, never()).findByClientId(anyLong());
     }
 }

@@ -9,6 +9,8 @@ import com.example.bankapi.repository.ClientRepository;
 import com.example.bankapi.repository.PhoneRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PhoneService {
 
@@ -44,5 +46,21 @@ public class PhoneService {
                 savedPhone.getNumber(),
                 savedPhone.getType()
         );
+    }
+    public List<PhoneResponse> getAll(Long clientId) {
+        if (!clientRepository.existsById(clientId)) {
+            throw new ClientNotFoundException(
+                    "Client with id " + clientId + " not found"
+            );
+        }
+
+        return phoneRepository.findByClientId(clientId)
+                .stream()
+                .map(phone -> new PhoneResponse(
+                        phone.getId(),
+                        phone.getNumber(),
+                        phone.getType()
+                ))
+                .toList();
     }
 }
