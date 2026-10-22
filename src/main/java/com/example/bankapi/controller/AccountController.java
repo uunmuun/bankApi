@@ -4,6 +4,8 @@ import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.service.AccountService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,14 +33,15 @@ public class AccountController {
     @PostMapping("/client/{clientId}")
     public ResponseEntity<AccountResponse> create(
             @PathVariable Long clientId,
-            @RequestBody AccountCreateRequest request
+            @Valid @RequestBody AccountCreateRequest request
     ) {
-        return ResponseEntity.ok(accountService.create(clientId, request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(accountService.create(clientId, request));
     }
     @PutMapping("/{id}")
     public ResponseEntity<AccountResponse> update(
             @PathVariable Long id,
-            @RequestBody AccountUpdateRequest request
+            @Valid @RequestBody AccountUpdateRequest request
     ) {
         return ResponseEntity.ok(accountService.update(id, request));
     }
@@ -53,5 +56,4 @@ public class AccountController {
     ) {
         return ResponseEntity.ok(accountService.getByClientId(clientId));
     }
-
 }
