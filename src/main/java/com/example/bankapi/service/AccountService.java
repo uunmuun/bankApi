@@ -5,12 +5,14 @@ import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
+import com.example.bankapi.exception.AccountNotEmptyException;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -119,6 +121,12 @@ public class AccountService {
                                 "Account with id " + id + " not found"
                         )
                 );
+
+        if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new AccountNotEmptyException(
+                    "Account balance must be zero to close the account"
+            );
+        }
 
         accountRepository.delete(account);
     }

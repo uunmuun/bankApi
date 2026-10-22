@@ -18,4 +18,14 @@ public class GlobalExceptionHandler {
     public String handleClientNotFound(ClientNotFoundException exception) {
         return exception.getMessage();
     }
+    @ExceptionHandler(AccountNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleAccountNotFound(AccountNotFoundException exception) {
+        return exception.getMessage();
+    }
+    @ExceptionHandler(AccountNotEmptyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleAccountNotEmpty(AccountNotEmptyException exception) {
+        return exception.getMessage();
+    }
 }

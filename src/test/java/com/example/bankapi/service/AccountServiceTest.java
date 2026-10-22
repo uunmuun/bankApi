@@ -6,6 +6,7 @@ import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Currency;
+import com.example.bankapi.exception.AccountNotEmptyException;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
@@ -236,7 +237,7 @@ class AccountServiceTest {
         Account account = new Account(
                 "123456789",
                 Currency.KGS,
-                new BigDecimal("1000.00"),
+                BigDecimal.ZERO,
                 client
         );
 
@@ -262,6 +263,37 @@ class AccountServiceTest {
         );
 
         verify(accountRepository).findById(999L);
+        verify(accountRepository, never()).delete(any(Account.class));
+    }
+    @Test
+    void delete_shouldThrowExceptionWhenBalanceIsNotZero() {
+
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        Account account = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("1000.00"),
+                client
+        );
+
+        ReflectionTestUtils.setField(account, "id", 1L);
+
+        when(accountRepository.findById(1L))
+                .thenReturn(Optional.of(account));
+
+        assertThrows(
+                AccountNotEmptyException.class,
+                () -> accountService.delete(1L)
+        );
+
+        verify(accountRepository).findById(1L);
         verify(accountRepository, never()).delete(any(Account.class));
     }
 }
