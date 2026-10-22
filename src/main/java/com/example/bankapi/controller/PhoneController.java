@@ -47,4 +47,12 @@ public class PhoneController {
     ) {
         return phoneService.update(clientId, phoneId, request);
     }
+    @DeleteMapping("/{phoneId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(
+            @PathVariable Long clientId,
+            @PathVariable Long phoneId
+    ) {
+        phoneService.delete(clientId, phoneId);
+    }
 }

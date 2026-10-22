@@ -98,4 +98,14 @@ public class PhoneService {
                 updatedPhone.getType()
         );
     }
+    public void delete(Long clientId, Long phoneId) {
+        Phone phone = phoneRepository.findByIdAndClientId(phoneId, clientId)
+                .orElseThrow(() ->
+                        new PhoneNotFoundException(
+                                "Phone with id " + phoneId + " not found"
+                        )
+                );
+
+        phoneRepository.delete(phone);
+    }
 }
