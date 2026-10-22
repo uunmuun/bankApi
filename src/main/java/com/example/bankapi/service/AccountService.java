@@ -2,6 +2,7 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
+import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientNotFoundException;
@@ -80,5 +81,27 @@ public class AccountService {
                         account.getClient().getId()
                 ))
                 .toList();
+    }
+    public AccountResponse update(Long id, AccountUpdateRequest request) {
+
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Account with id " + id + " not found"
+                        )
+                );
+
+        account.setCurrency(request.getCurrency());
+        account.setBalance(request.getBalance());
+
+        Account updatedAccount = accountRepository.save(account);
+
+        return new AccountResponse(
+                updatedAccount.getId(),
+                updatedAccount.getAccountNumber(),
+                updatedAccount.getCurrency(),
+                updatedAccount.getBalance(),
+                updatedAccount.getClient().getId()
+        );
     }
 }

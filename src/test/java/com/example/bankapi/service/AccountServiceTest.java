@@ -2,6 +2,7 @@ package com.example.bankapi.service;
 
 import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
+import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Currency;
@@ -165,5 +166,44 @@ class AccountServiceTest {
         assertEquals(Currency.USD, responses.get(1).getCurrency());
 
         verify(accountRepository).findAll();
+    }
+    @Test
+    void update_shouldUpdateAccount() {
+
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        Account account = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("1000.00"),
+                client
+        );
+
+        ReflectionTestUtils.setField(account, "id", 1L);
+
+        AccountUpdateRequest request = new AccountUpdateRequest();
+        request.setCurrency(Currency.USD);
+        request.setBalance(new BigDecimal("2500.00"));
+
+        when(accountRepository.findById(1L))
+                .thenReturn(Optional.of(account));
+
+        when(accountRepository.save(account))
+                .thenReturn(account);
+
+        AccountResponse response = accountService.update(1L, request);
+
+        assertEquals(1L, response.getId());
+        assertEquals(Currency.USD, response.getCurrency());
+        assertEquals(new BigDecimal("2500.00"), response.getBalance());
+
+        verify(accountRepository).findById(1L);
+        verify(accountRepository).save(account);
     }
 }
