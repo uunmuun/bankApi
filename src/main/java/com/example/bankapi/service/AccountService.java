@@ -5,6 +5,7 @@ import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
+import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
@@ -56,7 +57,7 @@ public class AccountService {
 
         Account account = accountRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new AccountNotFoundException(
                                 "Account with id " + id + " not found"
                         )
                 );
@@ -86,7 +87,7 @@ public class AccountService {
 
         Account account = accountRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new AccountNotFoundException(
                                 "Account with id " + id + " not found"
                         )
                 );
@@ -108,7 +109,7 @@ public class AccountService {
 
         Account account = accountRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new AccountNotFoundException(
                                 "Account with id " + id + " not found"
                         )
                 );

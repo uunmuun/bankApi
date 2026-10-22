@@ -6,6 +6,7 @@ import com.example.bankapi.dto.AccountUpdateRequest;
 import com.example.bankapi.entity.Account;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.entity.Currency;
+import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
@@ -124,6 +125,21 @@ class AccountServiceTest {
 
         verify(accountRepository).findById(1L);
     }
+
+    @Test
+    void getById_shouldThrowExceptionWhenAccountNotFound() {
+
+        when(accountRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                AccountNotFoundException.class,
+                () -> accountService.getById(999L)
+        );
+
+        verify(accountRepository).findById(999L);
+    }
+
     @Test
     void getAll_shouldReturnAccounts() {
 
@@ -241,7 +257,7 @@ class AccountServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(
-                RuntimeException.class,
+                AccountNotFoundException.class,
                 () -> accountService.delete(999L)
         );
 
