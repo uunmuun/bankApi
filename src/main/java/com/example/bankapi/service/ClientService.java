@@ -110,4 +110,14 @@ public class ClientService {
                 updatedClient.getBirthDate()
         );
     }
+    public void delete(Long id) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() ->
+                        new ClientNotFoundException(
+                                "Client with id " + id + " not found"
+                        )
+                );
+
+        clientRepository.delete(client);
+    }
 }
