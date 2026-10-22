@@ -28,4 +28,9 @@ public class GlobalExceptionHandler {
     public String handleAccountNotEmpty(AccountNotEmptyException exception) {
         return exception.getMessage();
     }
+    @ExceptionHandler(CardNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleCardNotFound(CardNotFoundException exception) {
+        return exception.getMessage();
+    }
 }
