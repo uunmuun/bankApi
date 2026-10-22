@@ -9,6 +9,8 @@ import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AccountService {
 
@@ -65,5 +67,18 @@ public class AccountService {
                 account.getBalance(),
                 account.getClient().getId()
         );
+    }
+    public List<AccountResponse> getAll() {
+
+        return accountRepository.findAll()
+                .stream()
+                .map(account -> new AccountResponse(
+                        account.getId(),
+                        account.getAccountNumber(),
+                        account.getCurrency(),
+                        account.getBalance(),
+                        account.getClient().getId()
+                ))
+                .toList();
     }
 }

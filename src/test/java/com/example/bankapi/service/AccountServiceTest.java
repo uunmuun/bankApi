@@ -17,6 +17,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -121,5 +122,48 @@ class AccountServiceTest {
         assertEquals(new BigDecimal("1000.00"), response.getBalance());
 
         verify(accountRepository).findById(1L);
+    }
+    @Test
+    void getAll_shouldReturnAccounts() {
+
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        Account account1 = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("1000.00"),
+                client
+        );
+
+        Account account2 = new Account(
+                "987654321",
+                Currency.USD,
+                new BigDecimal("500.00"),
+                client
+        );
+
+        ReflectionTestUtils.setField(account1, "id", 1L);
+        ReflectionTestUtils.setField(account2, "id", 2L);
+
+        when(accountRepository.findAll())
+                .thenReturn(List.of(account1, account2));
+
+        List<AccountResponse> responses = accountService.getAll();
+
+        assertEquals(2, responses.size());
+
+        assertEquals(1L, responses.get(0).getId());
+        assertEquals(Currency.KGS, responses.get(0).getCurrency());
+
+        assertEquals(2L, responses.get(1).getId());
+        assertEquals(Currency.USD, responses.get(1).getCurrency());
+
+        verify(accountRepository).findAll();
     }
 }
