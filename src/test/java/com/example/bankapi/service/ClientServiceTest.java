@@ -186,4 +186,36 @@ class ClientServiceTest {
 
         verify(clientRepository, never()).save(any(Client.class));
     }
+    @Test
+    void delete_shouldDeleteClient() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        when(clientRepository.findById(1L))
+                .thenReturn(Optional.of(client));
+
+        clientService.delete(1L);
+
+        verify(clientRepository).findById(1L);
+        verify(clientRepository).delete(client);
+    }
+    @Test
+    void delete_shouldThrowExceptionWhenClientNotFound() {
+        when(clientRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ClientNotFoundException.class,
+                () -> clientService.delete(999L)
+        );
+
+        verify(clientRepository, never()).delete(any(Client.class));
+    }
 }
