@@ -15,6 +15,7 @@ public class ClientCreateRequest {
     @NotBlank
     private String firstName;
 
+    @NotBlank
     private String middleName;
 
     @NotBlank
