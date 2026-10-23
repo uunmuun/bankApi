@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -303,5 +305,55 @@ class CardServiceTest {
 
         verify(cardRepository).findById(999L);
         verify(cardRepository, never()).delete(any(Card.class));
+    }
+
+    @Test
+    void getByAccountId_shouldReturnCardsOfAccount() {
+
+        Account account = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("1000.00"),
+                null
+        );
+
+        ReflectionTestUtils.setField(account, "id", 1L);
+
+        Card card = new Card(
+                "1234567890123456",
+                LocalDate.of(2030, 10, 23),
+                CardType.DEBIT,
+                CardStatus.ACTIVE,
+                account
+        );
+
+        ReflectionTestUtils.setField(card, "id", 1L);
+
+        when(accountRepository.existsById(1L))
+                .thenReturn(true);
+        when(cardRepository.findByAccountId(1L))
+                .thenReturn(List.of(card));
+
+        List<CardResponse> responses = cardService.getByAccountId(1L);
+
+        assertEquals(1, responses.size());
+        assertEquals(1L, responses.get(0).getId());
+        assertEquals(1L, responses.get(0).getAccountId());
+
+        verify(cardRepository).findByAccountId(1L);
+    }
+
+    @Test
+    void getByAccountId_shouldThrowExceptionWhenAccountNotFound() {
+
+        when(accountRepository.existsById(999L))
+                .thenReturn(false);
+
+        assertThrows(
+                AccountNotFoundException.class,
+                () -> cardService.getByAccountId(999L)
+        );
+
+        verify(cardRepository, never()).findByAccountId(anyLong());
     }
 }

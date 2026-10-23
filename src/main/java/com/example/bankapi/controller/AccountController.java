@@ -3,8 +3,10 @@ package com.example.bankapi.controller;
 import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.dto.AccountUpdateRequest;
+import com.example.bankapi.dto.CardResponse;
 import com.example.bankapi.dto.TransferRequest;
 import com.example.bankapi.service.AccountService;
+import com.example.bankapi.service.CardService;
 import com.example.bankapi.service.TransferService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,13 +21,16 @@ public class AccountController {
 
     private final AccountService accountService;
     private final TransferService transferService;
+    private final CardService cardService;
 
     public AccountController(
             AccountService accountService,
-            TransferService transferService
+            TransferService transferService,
+            CardService cardService
     ) {
         this.accountService = accountService;
         this.transferService = transferService;
+        this.cardService = cardService;
     }
 
     @GetMapping("/{id}")
@@ -37,6 +42,7 @@ public class AccountController {
     public ResponseEntity<List<AccountResponse>> getAll() {
         return ResponseEntity.ok(accountService.getAll());
     }
+
     @PostMapping("/client/{clientId}")
     public ResponseEntity<AccountResponse> create(
             @PathVariable Long clientId,
@@ -45,6 +51,7 @@ public class AccountController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(accountService.create(clientId, request));
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<AccountResponse> update(
             @PathVariable Long id,
@@ -52,16 +59,23 @@ public class AccountController {
     ) {
         return ResponseEntity.ok(accountService.update(id, request));
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         accountService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
     @GetMapping("/client/{clientId}")
     public ResponseEntity<List<AccountResponse>> getByClientId(
             @PathVariable Long clientId
     ) {
         return ResponseEntity.ok(accountService.getByClientId(clientId));
+    }
+
+    @GetMapping("/{id}/cards")
+    public ResponseEntity<List<CardResponse>> getCards(@PathVariable Long id) {
+        return ResponseEntity.ok(cardService.getByAccountId(id));
     }
 
     @PostMapping("/transfer")

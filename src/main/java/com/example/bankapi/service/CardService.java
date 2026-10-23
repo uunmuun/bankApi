@@ -162,6 +162,27 @@ public class CardService {
         );
     }
 
+    public List<CardResponse> getByAccountId(Long accountId) {
+
+        if (!accountRepository.existsById(accountId)) {
+            throw new AccountNotFoundException(
+                    "Account with id " + accountId + " not found"
+            );
+        }
+
+        return cardRepository.findByAccountId(accountId)
+                .stream()
+                .map(card -> new CardResponse(
+                        card.getId(),
+                        card.getCardNumber(),
+                        card.getExpirationDate(),
+                        card.getType(),
+                        card.getStatus(),
+                        card.getAccount().getId()
+                ))
+                .toList();
+    }
+
     public void delete(Long id) {
 
         Card card = cardRepository.findById(id)
