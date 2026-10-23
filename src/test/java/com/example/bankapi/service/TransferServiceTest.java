@@ -7,9 +7,11 @@ import com.example.bankapi.entity.Currency;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.CurrencyMismatchException;
 import com.example.bankapi.exception.InsufficientFundsException;
+import com.example.bankapi.exception.SameAccountTransferException;
 import com.example.bankapi.repository.AccountRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,6 +22,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,10 +62,10 @@ class TransferServiceTest {
         ReflectionTestUtils.setField(fromAccount, "id", 1L);
         ReflectionTestUtils.setField(toAccount, "id", 2L);
 
-        when(accountRepository.findById(1L))
+        when(accountRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(fromAccount));
 
-        when(accountRepository.findById(2L))
+        when(accountRepository.findByIdForUpdate(2L))
                 .thenReturn(Optional.of(toAccount));
 
         TransferRequest request = new TransferRequest(
@@ -83,8 +86,8 @@ class TransferServiceTest {
                 toAccount.getBalance()
         );
 
-        verify(accountRepository).findById(1L);
-        verify(accountRepository).findById(2L);
+        verify(accountRepository).findByIdForUpdate(1L);
+        verify(accountRepository).findByIdForUpdate(2L);
         verify(accountRepository).save(fromAccount);
         verify(accountRepository).save(toAccount);
     }
@@ -92,7 +95,19 @@ class TransferServiceTest {
     @Test
     void shouldThrowExceptionWhenFromAccountNotFound() {
 
-        when(accountRepository.findById(999L))
+        Account toAccount = new Account(
+                "987654321",
+                Currency.KGS,
+                new BigDecimal("500.00"),
+                null
+        );
+
+        ReflectionTestUtils.setField(toAccount, "id", 2L);
+
+        when(accountRepository.findByIdForUpdate(2L))
+                .thenReturn(Optional.of(toAccount));
+
+        when(accountRepository.findByIdForUpdate(999L))
                 .thenReturn(Optional.empty());
 
         TransferRequest request = new TransferRequest(
@@ -106,7 +121,7 @@ class TransferServiceTest {
                 () -> transferService.transfer(request)
         );
 
-        verify(accountRepository).findById(999L);
+        verify(accountRepository).findByIdForUpdate(999L);
         verify(accountRepository, never()).save(any(Account.class));
     }
 
@@ -122,10 +137,10 @@ class TransferServiceTest {
 
         ReflectionTestUtils.setField(fromAccount, "id", 1L);
 
-        when(accountRepository.findById(1L))
+        when(accountRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(fromAccount));
 
-        when(accountRepository.findById(999L))
+        when(accountRepository.findByIdForUpdate(999L))
                 .thenReturn(Optional.empty());
 
         TransferRequest request = new TransferRequest(
@@ -139,8 +154,8 @@ class TransferServiceTest {
                 () -> transferService.transfer(request)
         );
 
-        verify(accountRepository).findById(1L);
-        verify(accountRepository).findById(999L);
+        verify(accountRepository).findByIdForUpdate(1L);
+        verify(accountRepository).findByIdForUpdate(999L);
         verify(accountRepository, never()).save(any(Account.class));
     }
 
@@ -172,10 +187,10 @@ class TransferServiceTest {
         ReflectionTestUtils.setField(fromAccount, "id", 1L);
         ReflectionTestUtils.setField(toAccount, "id", 2L);
 
-        when(accountRepository.findById(1L))
+        when(accountRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(fromAccount));
 
-        when(accountRepository.findById(2L))
+        when(accountRepository.findByIdForUpdate(2L))
                 .thenReturn(Optional.of(toAccount));
 
         TransferRequest request = new TransferRequest(
@@ -230,10 +245,10 @@ class TransferServiceTest {
         ReflectionTestUtils.setField(fromAccount, "id", 1L);
         ReflectionTestUtils.setField(toAccount, "id", 2L);
 
-        when(accountRepository.findById(1L))
+        when(accountRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(fromAccount));
 
-        when(accountRepository.findById(2L))
+        when(accountRepository.findByIdForUpdate(2L))
                 .thenReturn(Optional.of(toAccount));
 
         TransferRequest request = new TransferRequest(
@@ -263,18 +278,6 @@ class TransferServiceTest {
     @Test
     void shouldThrowExceptionWhenTransferringToSameAccount() {
 
-        Account account = new Account(
-                "123456789",
-                Currency.KGS,
-                new BigDecimal("1000.00"),
-                null
-        );
-
-        ReflectionTestUtils.setField(account, "id", 1L);
-
-        when(accountRepository.findById(1L))
-                .thenReturn(Optional.of(account));
-
         TransferRequest request = new TransferRequest(
                 1L,
                 1L,
@@ -282,15 +285,50 @@ class TransferServiceTest {
         );
 
         assertThrows(
-                IllegalArgumentException.class,
+                SameAccountTransferException.class,
                 () -> transferService.transfer(request)
         );
 
-        assertEquals(
-                new BigDecimal("1000.00"),
-                account.getBalance()
+        verify(accountRepository, never()).findByIdForUpdate(anyLong());
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
+    @Test
+    void shouldLockAccountsInAscendingIdOrder() {
+
+        Account from = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("100.00"),
+                null
         );
 
-        verify(accountRepository, never()).save(any(Account.class));
+        Account to = new Account(
+                "987654321",
+                Currency.KGS,
+                new BigDecimal("0.00"),
+                null
+        );
+
+        ReflectionTestUtils.setField(from, "id", 2L);
+        ReflectionTestUtils.setField(to, "id", 1L);
+
+        when(accountRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(to));
+
+        when(accountRepository.findByIdForUpdate(2L))
+                .thenReturn(Optional.of(from));
+
+        TransferRequest request = new TransferRequest(
+                2L,
+                1L,
+                new BigDecimal("10.00")
+        );
+
+        transferService.transfer(request);
+
+        InOrder inOrder = inOrder(accountRepository);
+        inOrder.verify(accountRepository).findByIdForUpdate(1L);
+        inOrder.verify(accountRepository).findByIdForUpdate(2L);
     }
 }

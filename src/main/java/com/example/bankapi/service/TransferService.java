@@ -5,6 +5,7 @@ import com.example.bankapi.entity.Account;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.CurrencyMismatchException;
 import com.example.bankapi.exception.InsufficientFundsException;
+import com.example.bankapi.exception.SameAccountTransferException;
 import com.example.bankapi.repository.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,21 +24,25 @@ public class TransferService {
     @Transactional
     public void transfer(TransferRequest request) {
 
-        Account fromAccount = accountRepository.findById(request.getFromAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(
-                        "Account with id " + request.getFromAccountId() + " not found"
-                ));
+        Long fromId = request.getFromAccountId();
+        Long toId = request.getToAccountId();
 
-        Account toAccount = accountRepository.findById(request.getToAccountId())
-                .orElseThrow(() -> new AccountNotFoundException(
-                        "Account with id " + request.getToAccountId() + " not found"
-                ));
-
-        if (fromAccount.getId().equals(toAccount.getId())) {
-            throw new IllegalArgumentException(
+        if (fromId.equals(toId)) {
+            throw new SameAccountTransferException(
                     "Cannot transfer money to the same account"
             );
         }
+
+        // Блокируем счета в порядке возрастания id,
+        // чтобы встречные переводы не могли зайти в дедлок
+        Long firstId = Math.min(fromId, toId);
+        Long secondId = Math.max(fromId, toId);
+
+        Account first = lockAccount(firstId);
+        Account second = lockAccount(secondId);
+
+        Account fromAccount = fromId.equals(firstId) ? first : second;
+        Account toAccount = fromId.equals(firstId) ? second : first;
 
         if (fromAccount.getCurrency() != toAccount.getCurrency()) {
             throw new CurrencyMismatchException(
@@ -53,15 +58,17 @@ public class TransferService {
             );
         }
 
-        fromAccount.setBalance(
-                fromAccount.getBalance().subtract(amount)
-        );
-
-        toAccount.setBalance(
-                toAccount.getBalance().add(amount)
-        );
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        toAccount.setBalance(toAccount.getBalance().add(amount));
 
         accountRepository.save(fromAccount);
         accountRepository.save(toAccount);
+    }
+
+    private Account lockAccount(Long id) {
+        return accountRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        "Account with id " + id + " not found"
+                ));
     }
 }

@@ -55,4 +55,10 @@ public class GlobalExceptionHandler {
     public String handleInsufficientFunds(InsufficientFundsException exception) {
         return exception.getMessage();
     }
+    
+    @ExceptionHandler(SameAccountTransferException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleSameAccountTransfer(SameAccountTransferException exception) {
+        return exception.getMessage();
+    }
 }
