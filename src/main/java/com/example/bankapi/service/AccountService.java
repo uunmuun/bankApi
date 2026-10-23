@@ -9,6 +9,7 @@ import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.AccountNotEmptyException;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.exception.CurrencyChangeNotAllowedException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.CardRepository;
 import com.example.bankapi.repository.ClientRepository;
@@ -104,6 +105,13 @@ public class AccountService {
                                 "Account with id " + id + " not found"
                         )
                 );
+
+        if (account.getCurrency() != request.getCurrency()
+                && account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new CurrencyChangeNotAllowedException(
+                    "Cannot change currency of an account with non-zero balance"
+            );
+        }
 
         account.setCurrency(request.getCurrency());
 

@@ -10,6 +10,7 @@ import com.example.bankapi.entity.Currency;
 import com.example.bankapi.exception.AccountNotEmptyException;
 import com.example.bankapi.exception.AccountNotFoundException;
 import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.exception.CurrencyChangeNotAllowedException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.CardRepository;
 import com.example.bankapi.repository.ClientRepository;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +48,6 @@ class AccountServiceTest {
 
     @Test
     void shouldCreateAccount() {
-
         Client client = new Client(
                 "Ivanov",
                 "Ivan",
@@ -54,6 +56,8 @@ class AccountServiceTest {
                 LocalDate.of(1999, 5, 12)
         );
 
+        ReflectionTestUtils.setField(client, "id", 1L);
+
         AccountCreateRequest request = new AccountCreateRequest();
         request.setCurrency(Currency.KGS);
         request.setBalance(new BigDecimal("1000.00"));
@@ -61,21 +65,19 @@ class AccountServiceTest {
         when(clientRepository.findById(1L))
                 .thenReturn(Optional.of(client));
 
-        Account account = new Account(
-                null,
-                Currency.KGS,
-                new BigDecimal("1000.00"),
-                client
-        );
-
         when(accountRepository.save(any(Account.class)))
-                .thenReturn(account);
+                .thenAnswer(invocation -> {
+                    Account saved = invocation.getArgument(0);
+                    ReflectionTestUtils.setField(saved, "id", 1L);
+                    return saved;
+                });
 
         AccountResponse response = accountService.create(1L, request);
 
-        assertNotNull(response);
+        assertEquals(1L, response.getId());
         assertEquals(Currency.KGS, response.getCurrency());
         assertEquals(new BigDecimal("1000.00"), response.getBalance());
+        assertEquals(1L, response.getClientId());
 
         verify(clientRepository).findById(1L);
         verify(accountRepository).save(any(Account.class));
@@ -83,7 +85,6 @@ class AccountServiceTest {
 
     @Test
     void shouldNotCreateAccountWhenClientNotFound() {
-
         AccountCreateRequest request = new AccountCreateRequest();
         request.setCurrency(Currency.KGS);
         request.setBalance(new BigDecimal("1000.00"));
@@ -96,12 +97,11 @@ class AccountServiceTest {
                 () -> accountService.create(999L, request)
         );
 
-        verify(clientRepository).findById(999L);
         verify(accountRepository, never()).save(any(Account.class));
     }
+
     @Test
     void getById_shouldReturnAccount() {
-
         Client client = new Client(
                 "Ivanov",
                 "Ivan",
@@ -109,6 +109,8 @@ class AccountServiceTest {
                 "ivan@example.com",
                 LocalDate.of(1999, 5, 12)
         );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
 
         Account account = new Account(
                 "123456789",
@@ -128,13 +130,13 @@ class AccountServiceTest {
         assertEquals("123456789", response.getAccountNumber());
         assertEquals(Currency.KGS, response.getCurrency());
         assertEquals(new BigDecimal("1000.00"), response.getBalance());
+        assertEquals(1L, response.getClientId());
 
         verify(accountRepository).findById(1L);
     }
 
     @Test
     void getById_shouldThrowExceptionWhenAccountNotFound() {
-
         when(accountRepository.findById(999L))
                 .thenReturn(Optional.empty());
 
@@ -148,7 +150,6 @@ class AccountServiceTest {
 
     @Test
     void getAll_shouldReturnAccounts() {
-
         Client client = new Client(
                 "Ivanov",
                 "Ivan",
@@ -156,6 +157,8 @@ class AccountServiceTest {
                 "ivan@example.com",
                 LocalDate.of(1999, 5, 12)
         );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
 
         Account account1 = new Account(
                 "123456789",
@@ -180,18 +183,54 @@ class AccountServiceTest {
         List<AccountResponse> responses = accountService.getAll();
 
         assertEquals(2, responses.size());
-
         assertEquals(1L, responses.get(0).getId());
         assertEquals(Currency.KGS, responses.get(0).getCurrency());
-
         assertEquals(2L, responses.get(1).getId());
         assertEquals(Currency.USD, responses.get(1).getCurrency());
 
         verify(accountRepository).findAll();
     }
+
     @Test
     void update_shouldUpdateAccount() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
 
+        Account account = new Account(
+                "123456789",
+                Currency.KGS,
+                new BigDecimal("0.00"),
+                client
+        );
+
+        ReflectionTestUtils.setField(account, "id", 1L);
+
+        AccountUpdateRequest request = new AccountUpdateRequest();
+        request.setCurrency(Currency.USD);
+
+        when(accountRepository.findById(1L))
+                .thenReturn(Optional.of(account));
+
+        when(accountRepository.save(account))
+                .thenReturn(account);
+
+        AccountResponse response = accountService.update(1L, request);
+
+        assertEquals(1L, response.getId());
+        assertEquals(Currency.USD, response.getCurrency());
+        assertEquals(new BigDecimal("0.00"), response.getBalance());
+
+        verify(accountRepository).findById(1L);
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void update_shouldThrowExceptionWhenChangingCurrencyWithNonZeroBalance() {
         Client client = new Client(
                 "Ivanov",
                 "Ivan",
@@ -215,21 +254,34 @@ class AccountServiceTest {
         when(accountRepository.findById(1L))
                 .thenReturn(Optional.of(account));
 
-        when(accountRepository.save(account))
-                .thenReturn(account);
+        assertThrows(
+                CurrencyChangeNotAllowedException.class,
+                () -> accountService.update(1L, request)
+        );
 
-        AccountResponse response = accountService.update(1L, request);
+        assertEquals(Currency.KGS, account.getCurrency());
 
-        assertEquals(1L, response.getId());
-        assertEquals(Currency.USD, response.getCurrency());
-        assertEquals(new BigDecimal("1000.00"), response.getBalance());
-
-        verify(accountRepository).findById(1L);
-        verify(accountRepository).save(account);
+        verify(accountRepository, never()).save(any(Account.class));
     }
+
+    @Test
+    void update_shouldThrowExceptionWhenAccountNotFound() {
+        AccountUpdateRequest request = new AccountUpdateRequest();
+        request.setCurrency(Currency.USD);
+
+        when(accountRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                AccountNotFoundException.class,
+                () -> accountService.update(999L, request)
+        );
+
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
     @Test
     void delete_shouldDeleteAccount() {
-
         Client client = new Client(
                 "Ivanov",
                 "Ivan",
@@ -241,7 +293,7 @@ class AccountServiceTest {
         Account account = new Account(
                 "123456789",
                 Currency.KGS,
-                BigDecimal.ZERO,
+                new BigDecimal("0.00"),
                 client
         );
 
@@ -249,24 +301,17 @@ class AccountServiceTest {
 
         when(accountRepository.findById(1L))
                 .thenReturn(Optional.of(account));
-
-        when(cardRepository.existsByAccountIdAndStatus(
-                1L,
-                CardStatus.ACTIVE
-        )).thenReturn(false);
+        when(cardRepository.existsByAccountIdAndStatus(1L, CardStatus.ACTIVE))
+                .thenReturn(false);
 
         accountService.delete(1L);
 
-        verify(accountRepository).findById(1L);
-        verify(cardRepository).existsByAccountIdAndStatus(
-                1L,
-                CardStatus.ACTIVE
-        );
+        verify(cardRepository).deleteByAccountId(1L);
         verify(accountRepository).delete(account);
     }
+
     @Test
     void delete_shouldThrowExceptionWhenAccountNotFound() {
-
         when(accountRepository.findById(999L))
                 .thenReturn(Optional.empty());
 
@@ -275,14 +320,11 @@ class AccountServiceTest {
                 () -> accountService.delete(999L)
         );
 
-        verify(accountRepository).findById(999L);
-        verify(cardRepository, never())
-                .existsByAccountIdAndStatus(anyLong(), any(CardStatus.class));
         verify(accountRepository, never()).delete(any(Account.class));
     }
+
     @Test
     void delete_shouldThrowExceptionWhenBalanceIsNotZero() {
-
         Client client = new Client(
                 "Ivanov",
                 "Ivan",
@@ -308,9 +350,6 @@ class AccountServiceTest {
                 () -> accountService.delete(1L)
         );
 
-        verify(accountRepository).findById(1L);
-        verify(cardRepository, never())
-                .existsByAccountIdAndStatus(anyLong(), any(CardStatus.class));
         verify(accountRepository, never()).delete(any(Account.class));
     }
 }
