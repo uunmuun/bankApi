@@ -3,7 +3,9 @@ package com.example.bankapi.controller;
 import com.example.bankapi.dto.AccountCreateRequest;
 import com.example.bankapi.dto.AccountResponse;
 import com.example.bankapi.dto.AccountUpdateRequest;
+import com.example.bankapi.dto.TransferRequest;
 import com.example.bankapi.service.AccountService;
+import com.example.bankapi.service.TransferService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +18,14 @@ import java.util.List;
 public class AccountController {
 
     private final AccountService accountService;
+    private final TransferService transferService;
 
-    public AccountController(AccountService accountService) {
+    public AccountController(
+            AccountService accountService,
+            TransferService transferService
+    ) {
         this.accountService = accountService;
+        this.transferService = transferService;
     }
 
     @GetMapping("/{id}")
@@ -55,5 +62,13 @@ public class AccountController {
             @PathVariable Long clientId
     ) {
         return ResponseEntity.ok(accountService.getByClientId(clientId));
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<Void> transfer(
+            @Valid @RequestBody TransferRequest request
+    ) {
+        transferService.transfer(request);
+        return ResponseEntity.ok().build();
     }
 }
