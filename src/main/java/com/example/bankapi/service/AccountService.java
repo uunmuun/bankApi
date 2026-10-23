@@ -13,6 +13,7 @@ import com.example.bankapi.exception.CurrencyChangeNotAllowedException;
 import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.CardRepository;
 import com.example.bankapi.repository.ClientRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -125,6 +126,7 @@ public class AccountService {
                 updatedAccount.getClient().getId()
         );
     }
+    @Transactional
     public void delete(Long id) {
 
         Account account = accountRepository.findById(id)
