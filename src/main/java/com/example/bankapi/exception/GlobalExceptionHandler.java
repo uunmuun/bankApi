@@ -61,4 +61,10 @@ public class GlobalExceptionHandler {
     public String handleSameAccountTransfer(SameAccountTransferException exception) {
         return exception.getMessage();
     }
+
+    @ExceptionHandler(ClientHasAccountsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleClientHasAccounts(ClientHasAccountsException exception) {
+        return exception.getMessage();
+    }
 }

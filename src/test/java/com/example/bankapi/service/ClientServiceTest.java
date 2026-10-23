@@ -5,7 +5,9 @@ import com.example.bankapi.dto.ClientResponse;
 import com.example.bankapi.dto.ClientUpdateRequest;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
+import com.example.bankapi.exception.ClientHasAccountsException;
 import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +20,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +28,9 @@ class ClientServiceTest {
 
     @Mock
     private ClientRepository clientRepository;
+
+    @Mock
+    private AccountRepository accountRepository;
 
     @InjectMocks
     private ClientService clientService;
@@ -154,6 +160,7 @@ class ClientServiceTest {
                 () -> clientService.update(999L, request)
         );
     }
+
     @Test
     void update_shouldThrowExceptionWhenEmailAlreadyExists() {
         Client client = new Client(
@@ -186,6 +193,7 @@ class ClientServiceTest {
 
         verify(clientRepository, never()).save(any(Client.class));
     }
+
     @Test
     void delete_shouldDeleteClient() {
         Client client = new Client(
@@ -206,6 +214,7 @@ class ClientServiceTest {
         verify(clientRepository).findById(1L);
         verify(clientRepository).delete(client);
     }
+
     @Test
     void delete_shouldThrowExceptionWhenClientNotFound() {
         when(clientRepository.findById(999L))
@@ -214,6 +223,31 @@ class ClientServiceTest {
         assertThrows(
                 ClientNotFoundException.class,
                 () -> clientService.delete(999L)
+        );
+
+        verify(clientRepository, never()).delete(any(Client.class));
+    }
+
+    @Test
+    void delete_shouldThrowExceptionWhenClientHasAccounts() {
+        Client client = new Client(
+                "Ivanov",
+                "Ivan",
+                "Ivanovich",
+                "ivan@example.com",
+                LocalDate.of(1999, 5, 12)
+        );
+
+        ReflectionTestUtils.setField(client, "id", 1L);
+
+        when(clientRepository.findById(1L))
+                .thenReturn(Optional.of(client));
+        when(accountRepository.existsByClientId(1L))
+                .thenReturn(true);
+
+        assertThrows(
+                ClientHasAccountsException.class,
+                () -> clientService.delete(1L)
         );
 
         verify(clientRepository, never()).delete(any(Client.class));

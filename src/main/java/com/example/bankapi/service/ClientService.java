@@ -5,7 +5,9 @@ import com.example.bankapi.dto.ClientResponse;
 import com.example.bankapi.dto.ClientUpdateRequest;
 import com.example.bankapi.entity.Client;
 import com.example.bankapi.exception.ClientAlreadyExistsException;
+import com.example.bankapi.exception.ClientHasAccountsException;
 import com.example.bankapi.exception.ClientNotFoundException;
+import com.example.bankapi.repository.AccountRepository;
 import com.example.bankapi.repository.ClientRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +17,14 @@ import java.util.List;
 public class ClientService {
 
     private final ClientRepository clientRepository;
+    private final AccountRepository accountRepository;
 
-    public ClientService(ClientRepository clientRepository) {
+    public ClientService(
+            ClientRepository clientRepository,
+            AccountRepository accountRepository
+    ) {
         this.clientRepository = clientRepository;
+        this.accountRepository = accountRepository;
     }
 
     public ClientResponse create(ClientCreateRequest request) {
@@ -119,6 +126,12 @@ public class ClientService {
                                 "Client with id " + id + " not found"
                         )
                 );
+
+        if (accountRepository.existsByClientId(id)) {
+            throw new ClientHasAccountsException(
+                    "Client with id " + id + " has accounts and cannot be deleted"
+            );
+        }
 
         clientRepository.delete(client);
     }
