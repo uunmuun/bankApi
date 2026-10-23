@@ -67,4 +67,10 @@ public class GlobalExceptionHandler {
     public String handleClientHasAccounts(ClientHasAccountsException exception) {
         return exception.getMessage();
     }
+
+    @ExceptionHandler(CurrencyChangeNotAllowedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleCurrencyChangeNotAllowed(CurrencyChangeNotAllowedException exception) {
+        return exception.getMessage();
+    }
 }
