@@ -3,6 +3,8 @@ package com.example.bankapi.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Client {
@@ -21,6 +23,9 @@ public class Client {
     private String email;
 
     private LocalDate birthDate;
+
+    @OneToMany(mappedBy = "client", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Phone> phones = new ArrayList<>();
 
     protected Client() {
     }
