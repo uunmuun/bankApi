@@ -43,4 +43,16 @@ public class GlobalExceptionHandler {
     public String handleCardNotFound(CardNotFoundException exception) {
         return exception.getMessage();
     }
+
+    @ExceptionHandler(CurrencyMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleCurrencyMismatch(CurrencyMismatchException exception) {
+        return exception.getMessage();
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleInsufficientFunds(InsufficientFundsException exception) {
+        return exception.getMessage();
+    }
 }
